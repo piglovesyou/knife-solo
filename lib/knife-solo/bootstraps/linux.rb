@@ -39,9 +39,10 @@ module KnifeSolo::Bootstraps
       gem_install
       stream_command <<-BASH
         if [ -z "$GEM_HOME" ]; then
-          export GEM_HOME="\$HOME/.gem/ruby/$(ls ~/.gem/ruby/ | sort -r | head -1)"
+          GEM_HOME="\$HOME/.gem/ruby/$(ls ~/.gem/ruby/ | sort -r | head -1)"
           echo "export GEM_HOME=${GEM_HOME}" >> ~/.bashrc
           echo "export PATH=${GEM_HOME}/bin:\$PATH" >> ~/.bashrc
+          source ~/.bashrc
         fi
       BASH
     end
