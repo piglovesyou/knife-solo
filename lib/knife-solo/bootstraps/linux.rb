@@ -35,16 +35,15 @@ module KnifeSolo::Bootstraps
         if ! command -v ruby >/dev/null 2>&1 ; then
           sudo pacman -S --quiet --noconfirm ruby
         fi
-      BASH
-      gem_install
-      stream_command <<-BASH
         if [ -z "$GEM_HOME" ]; then
-          GEM_HOME="\$HOME/.gem/ruby/$(ls ~/.gem/ruby/ | sort -r | head -1)"
+          GEM_HOME=$(ruby -rubygems -e 'puts Gem.user_dir')
           echo "export GEM_HOME=${GEM_HOME}" >> ~/.bashrc
           echo "export PATH=${GEM_HOME}/bin:\$PATH" >> ~/.bashrc
           source ~/.bashrc
         fi
       BASH
+      stream_command("gem install --no-rdoc --no-ri #{gem_packages.join(' ')}") unless gem_packages.empty?
+      stream_command("gem install --no-rdoc --no-ri chef #{gem_options}")
     end
 
     def debianoid_gem_install
