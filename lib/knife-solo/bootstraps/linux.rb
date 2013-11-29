@@ -29,6 +29,23 @@ module KnifeSolo::Bootstraps
       gem_install
     end
 
+    def arch_gem_install
+      ui.msg("Installing required packages...")
+      stream_command <<-BASH
+        if ! command -v ruby >/dev/null 2>&1 ; then
+          sudo pacman -S --quiet --noconfirm ruby
+        fi
+      BASH
+      gem_install
+      stream_command <<-BASH
+        if [ -z "$GEM_HOME" ]; then
+          export GEM_HOME="\$HOME/.gem/ruby/$(ls ~/.gem/ruby/ | sort -r | head -1)"
+          echo "export GEM_HOME=${GEM_HOME}" >> ~/.bashrc
+          echo "export PATH=${GEM_HOME}/bin:\$PATH" >> ~/.bashrc
+        fi
+      BASH
+    end
+
     def debianoid_gem_install
       ui.msg "Updating apt caches..."
       run_command("sudo apt-get update")
@@ -93,6 +110,8 @@ module KnifeSolo::Bootstraps
         {:type => "zypper_omnibus"}
       when %r{This is \\n\.\\O \(\\s \\m \\r\) \\t}
         {:type => "emerge_gem"}
+      when %r{Arch Linux \\r \(\\l\)}
+        {:type => "arch_gem"}
       else
         raise "Distribution not recognized. Please run again with `-VV` option and file an issue: https://github.com/matschaffer/knife-solo/issues"
       end
