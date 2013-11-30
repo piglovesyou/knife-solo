@@ -29,21 +29,20 @@ module KnifeSolo::Bootstraps
       gem_install
     end
 
-    def arch_gem_install
+    def yaourt_install
       ui.msg("Installing required packages...")
       stream_command <<-BASH
-        if ! command -v ruby >/dev/null 2>&1 ; then
-          sudo pacman -S --quiet --noconfirm ruby
+        if ! sudo grep -Fxq "[archlinuxfrx]" /etc/pacman.conf ; then
+          sudo bash -c 'echo "[archlinuxfr]" >> /etc/pacman.conf'
+          sudo bash -c 'echo "SigLevel = Never" >> /etc/pacman.conf'
+          sudo bash -c 'echo "Server = http://repo.archlinux.fr/\\\$arch" >> /etc/pacman.conf'
         fi
-        if [ -z "$GEM_HOME" ]; then
-          GEM_HOME=$(ruby -rubygems -e 'puts Gem.user_dir')
-          echo "export GEM_HOME=${GEM_HOME}" >> ~/.bashrc
-          echo "export PATH=${GEM_HOME}/bin:\$PATH" >> ~/.bashrc
-          source ~/.bashrc
+        if ! command -v yaourt >/dev/null 2>&1 ; then
+          sudo pacman -Sy --noconfirm yaourt
         fi
+        yaourt -S --noconfirm ruby-chef rsync
       BASH
-      stream_command("gem install --no-rdoc --no-ri #{gem_packages.join(' ')}") unless gem_packages.empty?
-      stream_command("gem install --no-rdoc --no-ri chef #{gem_options}")
+      run_command("sudo gem install --no-rdoc --no-ri pry") # patch for ruby-chef
     end
 
     def debianoid_gem_install
@@ -111,7 +110,7 @@ module KnifeSolo::Bootstraps
       when %r{This is \\n\.\\O \(\\s \\m \\r\) \\t}
         {:type => "emerge_gem"}
       when %r{Arch Linux \\r \(\\l\)}
-        {:type => "arch_gem"}
+        {:type => "yaourt"}
       else
         raise "Distribution not recognized. Please run again with `-VV` option and file an issue: https://github.com/matschaffer/knife-solo/issues"
       end
