@@ -42,6 +42,7 @@ module KnifeSolo::Bootstraps
         fi
         yaourt -S --noconfirm ruby-chef rsync
       BASH
+      run_command("sudo gem install --no-rdoc --no-ri highline") # patch for ruby-chef
       run_command("sudo gem install --no-rdoc --no-ri pry") # patch for ruby-chef
     end
 
